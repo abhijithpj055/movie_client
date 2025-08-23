@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './guards/ProtectedRoute';
-import Navbar from './components/Navbar';
+import Navbar from './components/NavBar';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -13,7 +13,7 @@ import AdminDashboardPage from './pages/AdminDashboardPage';
 import './App.css';
 
 function AppRoutes() {
-  const { user } = useAuth();   // ✅ auth context ninnum user edukkuka
+  const { user } = useAuth();   
 
   return (
     <Routes>
@@ -42,7 +42,7 @@ function App() {
       <AuthProvider>
         <Router>
           <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
-            <Navbar />
+            <Navbar/>
             <main className="flex-grow">
               <AppRoutes /> {/* ✅ separate component */}
             </main>
