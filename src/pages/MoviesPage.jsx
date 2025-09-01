@@ -60,10 +60,10 @@ const MoviesPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredMovies.map(movie => (
               <MovieCard
-                key={movie.id}
-                id={movie.id}
+                key={movie._id}
+                id={movie._id}
                 title={movie.title}
-                posterUrl={movie.posterUrl}
+                posterUrl={movie.image}
                 rating={movie.rating}
                 isPremium={movie.isPremium}
               />

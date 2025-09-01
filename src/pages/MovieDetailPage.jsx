@@ -24,7 +24,11 @@ const MovieDetailPage = () => {
   const fetchMovie = async () => {
     try {
       const response = await getMovieById(id);
-      setMovie(response.data);
+      // ✅ Always make sure reviews exists as an array
+      setMovie({
+        ...response.data,
+        reviews: response.data.reviews || []
+      });
     } catch (error) {
       console.error('Error fetching movie:', error);
     } finally {
@@ -45,31 +49,27 @@ const MovieDetailPage = () => {
 
     setSubmitting(true);
     try {
+      // ✅ Prepare review data
       const review = {
-        user: user.name,
-        rating: parseInt(reviewForm.rating),
-        comment: reviewForm.comment
+        movie_id: id,
+        user_id: user?.id,
+        rating: reviewForm.rating,
+        comment: reviewForm.comment,
       };
 
-      await addReview(id, review);
-      
-      // Add the review to the local state
+      // ✅ Save review to backend and get saved object
+      const savedReview = await addReview(review);
+
+      // ✅ Update local state with backend review
       setMovie(prev => ({
         ...prev,
-        reviews: [...prev.reviews, {
-          ...review,
-          id: Date.now(),
-          createdAt: new Date().toISOString()
-        }]
+        reviews: [...(prev.reviews || []), savedReview],
       }));
-      
-      // Clear form
-      setReviewForm({
-        rating: 5,
-        comment: ''
-      });
+
+      // ✅ Reset form
+      setReviewForm({ rating: 5, comment: '' });
     } catch (error) {
-      console.error('Error submitting review:', error);
+      console.error("Error submitting review:", error);
     } finally {
       setSubmitting(false);
     }
@@ -100,7 +100,7 @@ const MovieDetailPage = () => {
           <div className="md:flex">
             <div className="md:w-1/3">
               <img
-                src={movie.posterUrl}
+                src={movie.image}
                 alt={movie.title}
                 className="w-full h-64 md:h-full object-cover"
               />
@@ -128,6 +128,10 @@ const MovieDetailPage = () => {
               <p className="text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
                 {movie.description}
               </p>
+              <div className="space-y-2 text-gray-700 dark:text-gray-300">
+                <p><span className="font-semibold">Director:</span> {movie.director?.name}</p>
+                <p><span className="font-semibold">Actors:</span> {movie.actors.map(a => a.name).join(', ')}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -185,10 +189,10 @@ const MovieDetailPage = () => {
 
         <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-            Reviews ({movie.reviews.length})
+            Reviews ({movie?.reviews?.length || 0})
           </h2>
           
-          {movie.reviews.length === 0 ? (
+          {!movie?.reviews || movie.reviews.length === 0 ? (
             <p className="text-gray-600 dark:text-gray-400">
               No reviews yet. Be the first to review this movie!
             </p>
@@ -196,8 +200,8 @@ const MovieDetailPage = () => {
             <div>
               {movie.reviews.map(review => (
                 <ReviewCard
-                  key={review.id}
-                  user={review.user}
+                  key={review._id || review.id}
+                  user={review.user?.name || review.user}   // ✅ handle both populated object & plain string
                   rating={review.rating}
                   comment={review.comment}
                   createdAt={review.createdAt}

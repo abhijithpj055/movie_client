@@ -32,7 +32,7 @@ const LoginPage = () => {
        if (loggedInUser.role === "admin") {
       navigate("/admin-dashboard");
     } else {
-      navigate("/");
+      navigate("/movies");
     }
     } catch (err) {
       setError(err.message || 'Login failed');

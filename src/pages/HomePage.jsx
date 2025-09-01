@@ -14,7 +14,7 @@ const HomePage = () => {
           </p>
           
           <div className="space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center">
-            <Link to="/movies">
+            <Link to="/signup">
               <Button text="Browse Movies" className="w-full sm:w-auto" />
             </Link>
             <Link to="/signup">
