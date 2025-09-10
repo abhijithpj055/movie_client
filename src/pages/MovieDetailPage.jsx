@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { getMovieById, addReview } from '../services/api';
+import { getMovieById, addReview,updateReview, deleteReview } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import ReviewCard from '../components/ReviewCard';
 import Button from '../components/Button';
@@ -16,6 +16,9 @@ const MovieDetailPage = () => {
     comment: ''
   });
   const [submitting, setSubmitting] = useState(false);
+  const [editingReviewId, setEditingReviewId] = useState(null);
+const [editForm, setEditForm] = useState({ rating: 5, comment: '' });
+
 
   useEffect(() => {
     fetchMovie();
@@ -43,37 +46,90 @@ const MovieDetailPage = () => {
     });
   };
 
-  const handleSubmitReview = async (e) => {
-    e.preventDefault();
-    if (!user) return;
+const handleSubmitReview = async (e) => {
+  e.preventDefault();
+  if (!user) return;
 
-    setSubmitting(true);
-    try {
-      // ✅ Prepare review data
-      const review = {
-        movie_id: id,
-        user_id: user?.id,
-        rating: reviewForm.rating,
-        comment: reviewForm.comment,
-      };
+  setSubmitting(true);
+  try {
+    const review = {
+      movie_id: id,
+      user_id: user?.id,
+      rating: reviewForm.rating,
+      comment: reviewForm.comment,
+    };
 
-      // ✅ Save review to backend and get saved object
-      const savedReview = await addReview(review);
+    // Save to backend
+    const savedReview = await addReview(review);
 
-      // ✅ Update local state with backend review
-      setMovie(prev => ({
-        ...prev,
-        reviews: [...(prev.reviews || []), savedReview],
-      }));
+    // Normalize for frontend
+    const normalizedReview = {
+      _id: savedReview.data._id,
+      comment: savedReview.data.comment,         // ✅ ensure comment is kept
+      rating: Number(savedReview.data.rating),   // ✅ ensure numeric
+      createdAt: savedReview.data.createdAt,     // ✅ keep timestamp
+      user_id: { name: user.name },         // ✅ show current user’s name
+    };
+   
+    // Update state
+    setMovie(prev => ({
+      ...prev,
+      reviews: [...(prev.reviews || []), normalizedReview],
+    }));
 
-      // ✅ Reset form
-      setReviewForm({ rating: 5, comment: '' });
-    } catch (error) {
-      console.error("Error submitting review:", error);
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    // Reset form
+    setReviewForm({ rating: 5, comment: '' });
+  } catch (error) {
+    console.error("Error submitting review:", error);
+  } finally {
+    setSubmitting(false);
+  }
+};
+
+ const handleEdit = (review) => {
+  setEditingReviewId(review._id);
+  setEditForm({ rating: review.rating, comment: review.comment });
+};
+
+const handleUpdate = async (e) => {
+  e.preventDefault();
+  try {
+    const response = await updateReview(editingReviewId, {
+      rating: editForm.rating,
+      comment: editForm.comment,
+    });
+
+    const updatedReview = {
+      ...response.data,
+      user_id: { name: user.name }, 
+    };
+
+    setMovie((prev) => ({
+      ...prev,
+      reviews: prev.reviews.map((r) =>
+        r._id === editingReviewId ? updatedReview : r
+      ),
+    }));
+
+    setEditingReviewId(null);
+  } catch (err) {
+    console.error("Error updating review:", err);
+  }
+};
+
+const handleDelete = async (id) => {
+  try {
+    await deleteReview(id);
+    setMovie((prev) => ({
+      ...prev,
+      reviews: prev.reviews.filter((r) => r._id !== id),
+    }));
+  } catch (err) {
+    console.error("Error deleting review:", err);
+  }
+};
+
+
 
   if (loading) {
     return <Loader fullScreen />;
@@ -198,15 +254,54 @@ const MovieDetailPage = () => {
             </p>
           ) : (
             <div>
-              {movie.reviews.map(review => (
-                <ReviewCard
-                  key={review._id || review.id}
-                  user={review.user?.name || review.user}   // ✅ handle both populated object & plain string
-                  rating={review.rating}
-                  comment={review.comment}
-                  createdAt={review.createdAt}
-                />
-              ))}
+              {movie.reviews.map((review) => {
+  const isOwnReview = user && review.user_id?.name === user.name;
+
+  if (editingReviewId === review._id) {
+    return (
+      <form key={review._id} onSubmit={handleUpdate} className="mb-4">
+        <select
+          name="rating"
+          value={editForm.rating}
+          onChange={(e) =>
+            setEditForm((prev) => ({ ...prev, rating: e.target.value }))
+          }
+          className="mb-2 w-full p-2 rounded"
+        >
+          {[1, 2, 3, 4, 5].map((r) => (
+            <option key={r} value={r}>{r} Star{r > 1 && 's'}</option>
+          ))}
+        </select>
+        <textarea
+          name="comment"
+          value={editForm.comment}
+          onChange={(e) =>
+            setEditForm((prev) => ({ ...prev, comment: e.target.value }))
+          }
+          className="w-full p-2 mb-2 rounded"
+        />
+        <div className="space-x-2">
+          <Button text="Update" type="submit" />
+          <Button text="Cancel" type="button" onClick={() => setEditingReviewId(null)} />
+        </div>
+      </form>
+    );
+  }
+
+  return (
+    <ReviewCard
+      key={review._id}
+      user={review.user_id?.name}
+      rating={review.rating}
+      comment={review.comment}
+      createdAt={review.createdAt}
+      isOwnReview={isOwnReview}
+      onEdit={() => handleEdit(review)}
+      onDelete={() => handleDelete(review._id)}
+    />
+  );
+})}
+
             </div>
           )}
         </div>

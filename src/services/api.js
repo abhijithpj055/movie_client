@@ -44,9 +44,6 @@ export const updateLanguage = async (id, data) => await api.put(`/languages/${id
 export const deleteLanguage = async (id) => await api.delete(`/languages/${id}`);
 
 // ---------------- REVIEWS ----------------
-// api.js
-// api.js
-// ---------------- REVIEWS ----------------
 export const addReview = async (review) => {
   return await api.post("/reviews", {
     movie_id: review.movie_id,
@@ -54,6 +51,14 @@ export const addReview = async (review) => {
     comment: review.comment,
   });
 };
+export const updateReview = async (id, data) => {
+  return await api.put(`/reviews/${id}`, data);
+};
+
+export const deleteReview = async (id) => {
+  return await api.delete(`/reviews/${id}`);
+};
+
 // Users API
 // api.js
 export const getUsers = async () => await api.get("/user/admin/all-users");

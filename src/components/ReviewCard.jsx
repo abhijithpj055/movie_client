@@ -1,13 +1,21 @@
-const ReviewCard = ({ user, rating, comment, createdAt }) => {
+const ReviewCard = ({
+  user,
+  rating,
+  comment,
+  createdAt,
+  isOwnReview = false,
+  onEdit,
+  onDelete
+}) => {
   const renderStars = (rating) => {
-    const r = Number(rating) || 0; // make sure it's a number
+    const r = Number(rating) || 0;
     return '⭐'.repeat(Math.min(r, 5));
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return ''; // fallback
+    if (!dateString) return '';
     const date = new Date(dateString);
-    if (isNaN(date)) return ''; // handle invalid date
+    if (isNaN(date)) return '';
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -28,6 +36,23 @@ const ReviewCard = ({ user, rating, comment, createdAt }) => {
         <span className="text-sm text-gray-600 dark:text-gray-400">{Number(rating) || 0}/5</span>
       </div>
       <p className="text-gray-700 dark:text-gray-300 text-sm">{comment || ''}</p>
+
+      {isOwnReview && (
+        <div className="mt-3 space-x-2">
+          <button
+            onClick={onEdit}
+            className="text-blue-500 hover:underline text-sm"
+          >
+            Edit
+          </button>
+          <button
+            onClick={onDelete}
+            className="text-red-500 hover:underline text-sm"
+          >
+            Delete
+          </button>
+        </div>
+      )}
     </div>
   );
 };
