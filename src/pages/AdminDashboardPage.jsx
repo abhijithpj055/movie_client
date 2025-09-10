@@ -155,7 +155,7 @@ const AdminDashboardPage = () => {
       formDataToSend.append('isPremium', movieForm.isPremium);
       formDataToSend.append('director', movieForm.director);
       formDataToSend.append('language', movieForm.language);
-      movieForm.actors.forEach(actorId => formDataToSend.append('actors[]', actorId));
+      movieForm.actors.forEach(actorId => formDataToSend.append('actors', actorId));
       if (movieForm.imageFile) formDataToSend.append('image', movieForm.imageFile);
 
       let res;
