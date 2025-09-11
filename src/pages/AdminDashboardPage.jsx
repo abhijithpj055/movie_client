@@ -147,55 +147,57 @@ const AdminDashboardPage = () => {
 
 
   const handleMovieSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setSuccessMessage('');
+  e.preventDefault();
+  setSubmitting(true);
+  setSuccessMessage('');
 
-    try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('title', movieForm.title);
-      formDataToSend.append('description', movieForm.description);
-      formDataToSend.append('release_date', movieForm.release_date);
-      formDataToSend.append('rating', parseFloat(movieForm.rating));
-      formDataToSend.append('isPremium', movieForm.isPremium);
-      formDataToSend.append('director', movieForm.director);
-      formDataToSend.append('language', movieForm.language);
-      formDataToSend.append('actors', JSON.stringify(movieForm.actors));
+  try {
+    const formData = new FormData();
+    formData.append('title', movieForm.title);
+    formData.append('description', movieForm.description);
+    formData.append('release_date', movieForm.release_date);
+    formData.append('rating', movieForm.rating);
+    formData.append('isPremium', movieForm.isPremium);
+    formData.append('director', movieForm.director);
+    formData.append('language', movieForm.language);
+    formData.append('actors', JSON.stringify(movieForm.actors)); // important
 
-      movieForm.actors.forEach(actorId => formDataToSend.append('actors', actorId));
-      if (movieForm.imageFile) formDataToSend.append('image', movieForm.imageFile);
+    if (movieForm.imageFile) formData.append('image', movieForm.imageFile);
 
-      let res;
-      if (editingMovieId) {
-        res = await updateMovie(editingMovieId, formDataToSend);
-        setMovies(movies.map(m => (m._id === editingMovieId ? res.data : m)));
-        setSuccessMessage('Movie updated successfully!');
-        setEditingMovieId(null);
-      } else {
-        res = await createMovie(formDataToSend);
-        setMovies([...movies, res.data]);
-        setSuccessMessage('Movie added successfully!');
-      }
-
-      setMovieForm({
-        title: '',
-        description: '',
-        release_date: '',
-        rating: 0,
-        isPremium: false,
-        imageFile: null,
-        director: '',
-        actors: [],
-        language: '',
-      });
-
-      setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setSubmitting(false);
+    let res;
+    if (editingMovieId) {
+      res = await updateMovie(editingMovieId, formData);
+      setMovies(movies.map(m => (m._id === editingMovieId ? res.data : m)));
+      setSuccessMessage('Movie updated successfully!');
+      setEditingMovieId(null);
+    } else {
+      res = await createMovie(formData);
+      setMovies([...movies, res.data]);
+      setSuccessMessage('Movie added successfully!');
     }
-  };
+
+    setMovieForm({
+      title: '',
+      description: '',
+      release_date: '',
+      rating: 0,
+      isPremium: false,
+      imageFile: null,
+      director: '',
+      actors: [],
+      language: '',
+    });
+
+    setTimeout(() => setSuccessMessage(''), 3000);
+
+  } catch (err) {
+    console.error('Error submitting movie:', err);
+    alert(err.response?.data?.message || 'Failed to submit movie');
+  } finally {
+    setSubmitting(false);
+  }
+};
+
 
   // ----------------- Generic CREATE -----------------
   const handleCreateDirector = async (e) => {
@@ -240,11 +242,11 @@ const AdminDashboardPage = () => {
   e.preventDefault();
   try {
     if (editingLanguageId) {
-      const res = await updateLanguage(editingLanguageId, { language: languageName });
+      const res = await updateLanguage(editingLanguageId, { name: languageName });
       setLanguages(languages.map(l => (l._id === editingLanguageId ? res.data : l)));
       setEditingLanguageId(null);
     } else {
-      const res = await createLanguage({ language: languageName });
+      const res = await createLanguage({ name: languageName });
       setLanguages([...languages, res.data]);
     }
     setLanguageName('');
@@ -297,7 +299,7 @@ const AdminDashboardPage = () => {
   };
 const startEditLanguage = (l) => {
   setEditingLanguageId(l._id);
-  setLanguageName(l.language || l.name || ''); 
+  setLanguageName( l.name ); 
 };
 
 
@@ -347,7 +349,7 @@ const startEditLanguage = (l) => {
 
                 <div>
                   <label htmlFor="image" className="block mb-1 font-semibold dark:text-white">Poster Image</label>
-                  <input id="image" type="file" name="image" onChange={handleMovieChange} required={!editingMovieId} className="w-full px-3 py-2 border rounded" />
+                  <input id="image" type="file" name="imageFile" onChange={handleMovieChange} required={!editingMovieId} className="w-full px-3 py-2 border rounded" />
                 </div>
 
                 <div>
@@ -394,7 +396,7 @@ const startEditLanguage = (l) => {
                   <label htmlFor="language" className='dark:text-white mb-1 font-semibold '>Language</label>
                   <select id="language" value={movieForm.language} onChange={e => setMovieForm({ ...movieForm, language: e.target.value })} required={!editingMovieId} className="w-full px-3 py-2 border rounded">
                     <option value="">Select Language</option>
-                    {languages.map(l => <option key={l._id} value={l._id}>{l.language || l.name}</option>)}
+                    {languages.map(l => <option key={l._id} value={l._id}>{l.name}</option>)}
                   </select>
                 </div>
 
