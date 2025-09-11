@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }) => {
   const login = async ({ email, password }) => {
     try {
       const res = await axios.post(
-        `${API_URL}/api/user/login`,
+        `${API_URL}/user/login`,
         { email, password },
         { withCredentials: true }
       );
@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }) => {
   const signup = async (userData) => {
     try {
       const res = await axios.post(
-        `${API_URL}/api/user/register`,
+        `${API_URL}/user/register`,
         userData,
         { withCredentials: true }
       );

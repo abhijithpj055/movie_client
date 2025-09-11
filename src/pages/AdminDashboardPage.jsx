@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Select from 'react-select';
 import {
   createMovie,
   updateMovie,
@@ -24,6 +25,8 @@ import {
 import Button from '../components/Button';
 import MovieCard from '../components/MovieCard';
 
+
+
 const AdminDashboardPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -33,6 +36,8 @@ const AdminDashboardPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [editingMovieId, setEditingMovieId] = useState(null);
+
+
 
 
 
@@ -224,23 +229,28 @@ const AdminDashboardPage = () => {
       console.error(err);
     }
   };
+  const actorOptions = actors.map(actor => ({
+  value: actor._id,
+  label: actor.name
+}));
 
   const handleCreateLanguage = async (e) => {
-    e.preventDefault();
-    try {
-      if (editingLanguageId) {
-        const res = await updateLanguage(editingLanguageId, { language: languageName });
-        setLanguages(languages.map(l => (l._id === editingLanguageId ? res.data : l)));
-        setEditingLanguageId(null);
-      } else {
-        const res = await createLanguage({ language: languageName });
-        setLanguages([...languages, res.data]);
-      }
-      setLanguageName('');
-    } catch (err) {
-      console.error(err);
+  e.preventDefault();
+  try {
+    if (editingLanguageId) {
+      const res = await updateLanguage(editingLanguageId, { language: languageName });
+      setLanguages(languages.map(l => (l._id === editingLanguageId ? res.data : l)));
+      setEditingLanguageId(null);
+    } else {
+      const res = await createLanguage({ language: languageName });
+      setLanguages([...languages, res.data]);
     }
-  };
+    setLanguageName('');
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 
   // ----------------- DELETE -----------------
   const handleDeleteDirector = async (id) => {
@@ -283,10 +293,11 @@ const AdminDashboardPage = () => {
     setEditingActorId(a._id);
     setActorName(a.name);
   };
-  const startEditLanguage = (l) => {
-    setEditingLanguageId(l._id);
-    setLanguageName(l.language);
-  };
+const startEditLanguage = (l) => {
+  setEditingLanguageId(l._id);
+  setLanguageName(l.language || l.name || ''); 
+};
+
 
   if (!user || user.role !== 'admin') return null;
 
@@ -360,21 +371,28 @@ const AdminDashboardPage = () => {
                   </select>
                 </div>
 
-                <div>
-                  <label htmlFor="actors" className='dark:text-white mb-1 font-semibold '>Actors</label>
-                  <select id="actors" multiple value={movieForm.actors} onChange={e => {
-                    const selected = Array.from(e.target.selectedOptions, opt => opt.value);
-                    setMovieForm({ ...movieForm, actors: selected });
-                  }} className="w-full px-3 py-2 border rounded">
-                    {actors.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
-                  </select>
-                </div>
+            <div>
+  <label htmlFor="actors" className="dark:text-white mb-1 font-semibold">Actors</label>
+  <Select
+    id="actors"
+    isMulti
+    options={actorOptions}
+    value={actorOptions.filter(option => movieForm.actors.includes(option.value))}
+    onChange={(selectedOptions) => {
+      setMovieForm({
+        ...movieForm,
+        actors: selectedOptions.map(option => option.value)
+      });
+    }}
+    className="text-black"
+  />
+</div>
 
                 <div>
                   <label htmlFor="language" className='dark:text-white mb-1 font-semibold '>Language</label>
                   <select id="language" value={movieForm.language} onChange={e => setMovieForm({ ...movieForm, language: e.target.value })} required={!editingMovieId} className="w-full px-3 py-2 border rounded">
                     <option value="">Select Language</option>
-                    {languages.map(l => <option key={l._id} value={l._id}>{l.language}</option>)}
+                    {languages.map(l => <option key={l._id} value={l._id}>{l.language || l.name}</option>)}
                   </select>
                 </div>
 
@@ -540,7 +558,7 @@ const AdminDashboardPage = () => {
             <ul className="space-y-2 max-h-64 overflow-y-auto">
               {languages.map(l => (
                 <li key={l._id} className="flex justify-between items-center">
-                  <span>{l.language}</span>
+                  <span>{l.language || l.name}</span>
                   <div className="flex gap-2">
                     <button onClick={() => startEditLanguage(l)} className="text-yellow-500">Edit</button>
                     <button onClick={() => handleDeleteLanguage(l._id)} className="text-red-500">Delete</button>
