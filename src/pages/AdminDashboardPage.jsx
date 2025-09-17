@@ -349,7 +349,7 @@ const startEditLanguage = (l) => {
 
                 <div>
                   <label htmlFor="image" className="block mb-1 font-semibold dark:text-white">Poster Image</label>
-                  <input id="image" type="file" name="imageFile" onChange={handleMovieChange} required={!editingMovieId} className="w-full px-3 py-2 border rounded" />
+                  <input id="image" type="file" name="image" onChange={handleMovieChange} required={!editingMovieId} className="w-full px-3 py-2 border rounded" />
                 </div>
 
                 <div>
